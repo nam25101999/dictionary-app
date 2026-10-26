@@ -1,0 +1,22 @@
+# Git & Environment
+.git
+.gitignore
+.env
+.env.*
+*.env
+
+# Build outputs & dependencies
+**/node_modules
+**/dist
+**/target
+**/*.class
+**/*.jar
+
+# IDE & OS
+.idea
+.vscode
+*.iml
+.DS_Store
+Thumbs.db
+*.log
+docker/jenkins/jenkins_home

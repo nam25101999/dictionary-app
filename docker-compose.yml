@@ -1,0 +1,73 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: dictionary-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-dictionary_db}
+      POSTGRES_USER: ${POSTGRES_USER:-dict_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-dict_secure_password_2026}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - dictionary-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: dictionary-backend
+    restart: unless-stopped
+    environment:
+      SERVER_PORT: 8080
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/${POSTGRES_DB:-dictionary_db}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-dict_user}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-dict_secure_password_2026}
+    ports:
+      - "${BACKEND_PORT:-8180}:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - dictionary-network
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://127.0.0.1:8080/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 25s
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: dictionary-frontend
+    restart: unless-stopped
+    ports:
+      - "${FRONTEND_PORT:-3100}:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - dictionary-network
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://127.0.0.1/"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+
+volumes:
+  postgres_data:
+    name: dictionary_postgres_data
+
+networks:
+  dictionary-network:
+    name: dictionary_network
+    driver: bridge

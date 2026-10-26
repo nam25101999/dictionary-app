@@ -1,0 +1,16 @@
+# Production override file
+# Overrides local image build instructions with published images from GHCR
+# Preserves internal networks, healthchecks, and the named volume 'postgres_data'
+
+services:
+  backend:
+    build: !reset null
+    image: ${IMAGE_REGISTRY:-ghcr.io}/${IMAGE_OWNER}/dictionary-backend:${IMAGE_TAG:-latest}
+    pull_policy: always
+    restart: always
+
+  frontend:
+    build: !reset null
+    image: ${IMAGE_REGISTRY:-ghcr.io}/${IMAGE_OWNER}/dictionary-frontend:${IMAGE_TAG:-latest}
+    pull_policy: always
+    restart: always
