@@ -1,0 +1,6 @@
+git --version
+docker --version
+docker compose version
+node --version
+npm --version
+java -version
